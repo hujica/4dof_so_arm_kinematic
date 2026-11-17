@@ -19,3 +19,7 @@ log/
 # Linux
 *.swp
 .DS_Store
+error.log
+*.log
+__pycache__/
+*.pyc
