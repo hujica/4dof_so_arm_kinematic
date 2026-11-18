@@ -31,8 +31,16 @@ class SOArm101GUI:
     def __init__(self, root_window: tk.Tk, controller, ros_node):
         self.root = root_window
         self.root.title("SO-ARM101  |  Velocity Kinematics Console")
-        self.root.geometry("1320x820")
-        self.root.minsize(1100, 700)
+        #self.root.geometry("1320x820")
+        try:
+            self.root.state("zoomed")
+        except tk.TclError:
+            try:
+                self.root.attributes("-zoomed", True)
+            except tk.TclError:
+                w, h = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+                self.root.geometry(f"{w}x{h}+0+0")
+        self.root.minsize(800, 480)
 
         self.arm_controller = controller
         self.ctrl = controller
@@ -134,11 +142,11 @@ class SOArm101GUI:
         self._build_speed_card(left)
         self._build_joint_card(left)
 
-        self.btn_estop = tk.Button(left, text="⏻   EMERGENCY STOP", bg=C["danger"], fg="white",
+        """self.btn_estop = tk.Button(left, text="⏻   EMERGENCY STOP", bg=C["danger"], fg="white",
                                    activebackground="#ff7a90", activeforeground="white",
                                    font=("Segoe UI", 12, "bold"), relief="flat", bd=0, pady=11,
                                    cursor="hand2", command=self._toggle_estop)
-        self.btn_estop.pack(fill="x", pady=(10, 0))
+        self.btn_estop.pack(fill="x", pady=(10, 0))"""
 
         self._build_viewports(right)
 
@@ -148,29 +156,29 @@ class SOArm101GUI:
         for col, (name, unit) in enumerate([("X", "mm"), ("Y", "mm"), ("Z", "mm"), ("PITCH", "°")]):
             ttk.Label(b, text=f"{name} ({unit})", style="Muted.TLabel").grid(row=0, column=col, padx=8, sticky="w")
             lbl = self._mono(b, "0.0", 16, C["accent"], width=7)
-            lbl.grid(row=1, column=col, padx=4, pady=(0, 6))
+            lbl.grid(row=1, column=col, padx=4, pady=(0, 2))
             self.pose_lbls.append(lbl)
             b.columnconfigure(col, weight=1)
         ttk.Label(b, text="TIP VELOCITY", style="Muted.TLabel").grid(row=2, column=0, columnspan=4,
-                                                                     padx=8, sticky="w")
+                                                                     padx=2, sticky="w")
         self.lbl_tip_v = self._mono(b, "", 10, C["ok"])
         self.lbl_tip_v.grid(row=3, column=0, columnspan=4, padx=8, sticky="w")
 
     def _build_jog_card(self, parent):
         b = self._card(parent, "Cartesian jog  ·  hold to move")
         pad = [("▲  +X", (1, 0, 0), 0, 1), ("▼  −X", (-1, 0, 0), 2, 1),
-               ("◀  −Y", (0, -1, 0), 1, 0), ("+Y  ▶", (0, 1, 0), 1, 2),
+               ("◀  −Y", (0, 1, 0), 1, 0), ("+Y  ▶", (0, -1, 0), 1, 2),
                ("⬆  +Z", (0, 0, 1), 0, 4), ("⬇  −Z", (0, 0, -1), 2, 4)]
         for text, vec, r, c in pad:
             btn = ttk.Button(b, text=text, style="Jog.TButton", width=8)
-            btn.grid(row=r, column=c, padx=3, pady=3, sticky="nsew")
+            btn.grid(row=r, column=c, padx=3, pady=2, sticky="nsew")
             btn.bind("<ButtonPress-1>", lambda e, v=vec: setattr(self, "jog_dir", v))
             btn.bind("<ButtonRelease-1>", lambda e: setattr(self, "jog_dir", None))
         ttk.Button(b, text="HOME", style="Home.TButton", width=8, command=self._on_home_arm
-                   ).grid(row=1, column=1, padx=3, pady=3, sticky="nsew")
+                   ).grid(row=1, column=1, padx=3, pady=2, sticky="nsew")
         b.columnconfigure(3, minsize=18)
         ttk.Label(b, text="X forward · Y right · Z up   (resolved-rate control)", style="Muted.TLabel"
-                  ).grid(row=3, column=0, columnspan=5, pady=(6, 0), sticky="w")
+                  ).grid(row=3, column=0, columnspan=5, pady=(2, 0), sticky="w")
 
     def _build_speed_card(self, parent):
         b = self._card(parent, "Velocity input")
@@ -179,13 +187,13 @@ class SOArm101GUI:
         rows = [("Linear (tip)", self.lin_var, 5, 150, 5, "mm/s"),
                 ("Joint max", self.ang_var, 5, 120, 5, "°/s")]
         for r, (name, var, lo, hi, inc, unit) in enumerate(rows):
-            ttk.Label(b, text=name, style="Card.TLabel").grid(row=r, column=0, sticky="w", pady=5)
+            ttk.Label(b, text=name, style="Card.TLabel").grid(row=r, column=0, sticky="w", pady=2)
             ttk.Scale(b, from_=lo, to=hi, variable=var, length=170,
                       command=lambda v, var=var: var.set(round(float(v)))
                       ).grid(row=r, column=1, padx=10)
             ttk.Spinbox(b, from_=lo, to=hi, increment=inc, textvariable=var, width=5
                         ).grid(row=r, column=2)
-            ttk.Label(b, text=unit, style="Muted.TLabel").grid(row=r, column=3, padx=(6, 0))
+            ttk.Label(b, text=unit, style="Muted.TLabel").grid(row=r, column=3, padx=(2, 0))
 
     def _build_joint_card(self, parent):
         b = self._card(parent, f"Joint targets  ·  −{LIMIT}° … +{LIMIT}°")
@@ -196,7 +204,7 @@ class SOArm101GUI:
         for i in range(4):
             r = i + 1
             tk.Label(b, text=JOINT_NAMES[i], bg=C["card"], fg=JOINT_COLORS[i],
-                     font=("Segoe UI", 10, "bold"), width=11, anchor="w").grid(row=r, column=0, pady=5)
+                     font=("Segoe UI", 10, "bold"), width=11, anchor="w").grid(row=r, column=0, pady=3)
             sc = ttk.Scale(b, from_=-LIMIT, to=LIMIT, length=130,
                            command=lambda v, i=i: self._on_slider(i, v))
             sc.set(q0[i])
@@ -221,7 +229,7 @@ class SOArm101GUI:
         ttk.Label(hdr, text="3D KINEMATIC VISUALIZER", style="Title.TLabel").pack(side="left")
         ttk.Label(hdr, text="Drag canvas to rotate view", style="Muted.TLabel").pack(side="right")
 
-        self.arm_canvas = tk.Canvas(arm_frame, bg=C["bg"], highlightthickness=0, height=420)
+        self.arm_canvas = tk.Canvas(arm_frame, bg=C["bg"], highlightthickness=0, height=360)
         self.arm_canvas.pack(fill="both", expand=True)
         self.arm_canvas.bind("<ButtonPress-1>", self._on_cam_press)
         self.arm_canvas.bind("<B1-Motion>", self._on_cam_drag)
@@ -239,8 +247,15 @@ class SOArm101GUI:
             tk.Label(leg, text=f"■ J{i+1}", bg=C["card"], fg=JOINT_COLORS[i],
                      font=("Segoe UI", 9, "bold")).pack(side="left", padx=6)
 
-        self.vel_canvas = tk.Canvas(vel_frame, bg=C["bg"], highlightthickness=0, height=190)
+        self.vel_canvas = tk.Canvas(vel_frame, bg=C["bg"], highlightthickness=0, height=135)
         self.vel_canvas.pack(fill="x")
+
+        # Emergency Stop Button (bottom of left panel)
+        self.btn_estop = tk.Button(parent, text="⏻   EMERGENCY STOP", bg=C["danger"], fg="white",
+                                           activebackground="#ff7a90", activeforeground="white",
+                                           font=("Segoe UI", 12, "bold"), relief="flat", bd=0, pady=6,
+                                           cursor="hand2", command=self._toggle_estop)
+        self.btn_estop.pack(fill="x", pady=(6, 0))
 
     # ======================================================= 3D math & canvas
     def _on_cam_press(self, event):
@@ -277,18 +292,8 @@ class SOArm101GUI:
         return np.column_stack((sx, sy))
 
     def _compute_joint_positions(self):
-        l1, l2, l3, l4 = self.ctrl.kinematics.link_lengths
-        q = np.radians(self.ctrl.current_joint_angles)
-        th1, th2, th3, th4 = q
-        p0 = [0.0, 0.0, 0.0]
-        p1 = [0.0, 0.0, l1]
-        r2 = l2 * np.cos(th2)
-        p2 = [r2 * np.cos(th1), r2 * np.sin(th1), l1 + l2 * np.sin(th2)]
-        r3 = r2 + l3 * np.cos(th2 + th3)
-        p3 = [r3 * np.cos(th1), r3 * np.sin(th1), p2[2] + l3 * np.sin(th2 + th3)]
-        r4 = r3 + l4 * np.cos(th2 + th3 + th4)
-        p4 = [r4 * np.cos(th1), r4 * np.sin(th1), p3[2] + l4 * np.sin(th2 + th3 + th4)]
-        return np.array([p0, p1, p2, p3, p4], dtype=float)
+        # Take the points from the kinematics so the DH shoulder offset (a1 = 4.2 cm) is drawn too
+        return np.asarray(self.ctrl.kinematics.joint_positions(self.ctrl.current_joint_angles), dtype=float)
 
     def _draw_3d_scene(self):
         cv = self.arm_canvas

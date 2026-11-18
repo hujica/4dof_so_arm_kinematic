@@ -8,7 +8,7 @@ class ArmController:
     """Velocity-level controller: Cartesian jogging (resolved-rate) and joint moves,
     both with a user-defined speed and a +/-60 deg joint window."""
 
-    HOME_POSE = [0.0, 30.0, -45.0, 15.0]
+    HOME_POSE = [0.0, 0.0, 0.0, 0.0]     # physical L-shape: all servos at 1024 steps
     JOINT_LIMIT_DEG = 60.0
     COMM_FAIL_LIMIT = 5            # consecutive failed servo writes before auto E-stop
 
